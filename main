@@ -1,0 +1,98 @@
+import asyncio
+import logging
+from re import A
+import sys
+from os import getenv
+
+from aiogram import Bot, Dispatcher, html
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
+from aiogram.filters import CommandStart
+from aiogram.types import Message
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import CallbackQuery
+import random
+
+TOKEN = "8415236368:AAFgvzQWi4QvHP9RjIDnRuUtXCPKBbITnao"
+
+
+class Entity:
+    def __init__(self, health, damage, armor):
+        self.health = health
+        self.damage = damage
+        self.armor = armor
+
+    def attack(self, target):
+        effective_damage = max(0, self.damage - target.armor)
+        target.health -= effective_damage
+
+class Enemy(Entity):
+
+    def difficulty_level(self, difficulty):
+        self.difficulty_level = difficulty
+        
+class Player(Entity):
+    def __init__(self, level):
+        self.level = level
+
+def Create_Enemy():
+    difficulty = random.choice(["easy","medium","hard"])
+
+    if difficulty == "easy":
+        return Enemy(
+            random.randint(50, 100),
+            random.randint(5, 10),
+            random.randint(2,5)
+        )
+    if difficulty == "medium":
+        return Enemy(
+            random.randint(100, 150),
+            random.randint(10, 15),
+            random.randint(5, 10)
+        )
+    if difficulty == "hard":
+        return Enemy(
+            random.randint(150, 200),
+            random.randint(15, 20),
+            random.randint(10,20)
+        )
+
+Enemy = Create_Enemy()
+Player = Entity(200, 20, 5)
+
+bot = Bot(token=TOKEN)
+dp = Dispatcher()
+
+@dp.message(CommandStart())
+async def command_start_handler(message: Message) -> None:
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="Attack", callback_data="attack"),
+                InlineKeyboardButton(text="Do nothing", callback_data="nothing")
+            ]
+        ])
+    await message.answer("Hello, you have an enemy in front of you, what would you like to do?",reply_markup=keyboard)
+
+@dp.callback_query()
+async def handle_callback(callback: CallbackQuery):
+    if callback.data == "attack":
+        Player.attack(Enemy)
+        await callback.message.answer(f"You've attacked an enemy, enemy now has {Enemy.health} health")
+    elif callback.data == "nothing":
+        Enemy.attack(Player)
+        await callback.message.answer(f"you have done nothing, enemy attacks you, you now have {Player.health} health")
+    await callback.answer()
+    
+
+
+
+
+async def main():
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+        
