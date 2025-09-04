@@ -1,5 +1,4 @@
 import random
-# pyright: ignore[reportMissingImports]
 
 class Entity:
     def __init__(self, health, damage, armor):
@@ -17,8 +16,23 @@ class Enemy(Entity):
         self.difficulty_level = difficulty
         
 class Player(Entity):
-    def __init__(self, level):
-        self.level = level
+    def __init__(self,health, damage, armor):
+        super().__init__(health, damage, armor)
+        self.level = 0
+        self.experience = 0
+    
+    def level_up(self):
+        self.level += 1
+        self.health += 10
+        self.damage += 5
+        self.armor += 2
+
+    def gain_experience(self, amount):
+        self.experience += amount
+        if self.experience >= 100:
+            self.level_up()
+        self.experience = self.experience % 100
+
 
 def Create_Enemy():
     difficulty = random.choice(["easy","medium","hard"])
@@ -41,6 +55,13 @@ def Create_Enemy():
             random.randint(15, 20),
             random.randint(10,20)
         )
+    
+
+        
+
+    
+    
+    
 def main():
     gigachad = Create_Enemy()   
 
